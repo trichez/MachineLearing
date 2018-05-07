@@ -8,7 +8,6 @@
 # synopsis:
 # python3 LogisticRegressor.py sudents.csv
 import numpy as np
-import matplotlib.pyplot as plt
 import sys
 
 def sigmoid(z):
@@ -56,7 +55,7 @@ thetaP = []
 XtrainLen = 0.7
 nFeatures = 0
 Alpha = 0.0001 # Learning rate
-
+Epsilon = 0.000001
 
 
 fileReader = open(sys.argv[1],'r')
@@ -96,7 +95,7 @@ yTrain = y[:tSize]
 yTest = y[tSize:]
 
 
-Theta, J = gradDescendent(xTrain, yTrain , Theta, Alpha, 0.000001)
-y_hat = np.round(sigmoid(h(xTest, Theta)))
+Theta, J = gradDescendent(xTrain, yTrain , Theta, Alpha, Epsilon) # trainning
+y_hat = np.round(sigmoid(h(xTest, Theta))) # applying thetas recently getted from trainnning
 
-print("Accuracy: ", np.mean(yTest == y_hat)*100,'%')
+print("Accuracy: {}%".format( np.mean(yTest == y_hat)*100)) # how much of those y's were rightly predicted
