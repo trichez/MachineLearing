@@ -1,4 +1,4 @@
-# Logistic regressor based on Linear Regressor (basic)
+# Logistic regressor based on Linear Regressor (for unbalanced data set)
 # Obs1: uses sigmoid function to transform the linear regressor into a logistic regressor
 # Obs2: as long as the data set is an CSV file, it works for any-size data sets
 # Author: Matheus Henrique Trichez
@@ -7,6 +7,7 @@
 # ----------------
 # synopsis:
 # python3 LogisticRegressor.py sudents.csv
+from sklearn.utils import shuffle
 import numpy as np
 import sys
 
@@ -54,40 +55,38 @@ lines = []
 thetaP = []
 XtrainLen = 0.7
 nFeatures = 0
-Alpha = 0.0001 # Learning rate
-Epsilon = 0.000001
-
+Alpha = 0.001 # Learning rate
+Epsilon = 0.00001
+separetor = '\t'
+np.random.seed(777)
 
 fileReader = open(sys.argv[1],'r')
 lines = fileReader.readlines() #fileReader is now on EOF
+lines = shuffle(lines, random_state=np.random.random_integers(100))
+
 
 for c in lines[0]: #counts how many commas has the file, so while its a csv file it should work for any dimension
-	if c == ',':
+	if c == separetor:
 		nFeatures = nFeatures + 1
 Theta = np.array([np.ones(nFeatures+1)])
-print("# features", nFeatures)
+print("# features", nFeatures+1)
 
-y = np.array([[i.split(',')[nFeatures][:-1]] for i in lines], dtype=float)
-X =	np.array([k.split(',')[0:nFeatures] for k in lines], dtype=float)
+y = np.array([[i.split(separetor)[nFeatures][:-1]] for i in lines], dtype=float)
+X =	np.array([k.split(separetor)[0:nFeatures] for k in lines], dtype=float)
+
+for ys in y:
+	ys[0] = ys[0] - 1
+
+#for scailing features, if needed
+f=0
+for f in range(nFeatures):  # scailing data by some policy, changing it may improve your models performance
+	X[:,f] = (X[:,f] - np.mean(X[:,f],0) )	/ np.std(X[:,f],0)
+
 X = np.insert(X, 0,1, axis=1) #insert a column of 1's so we can use the bias
-
 print("theta shape:", Theta.shape)
 print("y shape:", y.shape)
 print("X shape:", X.shape)
 
-'''
-for scailing features, if needed
-f=1
-for f in range(nFeatures):  # scailing data by some policy, changing it may improve your models performance
-
-	maxFeature = np.max(X[:,f],0)
-
-	if maxFeature < 1.0:
-		continue
-	else:
-		X[:,f] = X[:,f] / maxFeature  										# scailing(i.e. normalize) the data (because of de disantce between mean values of the features)
-
-'''
 tSize = int(np.shape(X)[0]*XtrainLen)
 xTrain = X[:tSize]
 xTest = X[tSize:]
