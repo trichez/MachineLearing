@@ -8,59 +8,117 @@ import numpy as np
 import sys
 
 
-k = 2
+k = 1
+nIters = 1
+iterNumber = 0
 lines = []
-thetaP = []
+uc = []
+centroids = []
+dists = []
+distances = []
+costs = []
 XtrainLen = 0.7
 nFeatures = 0
-Alpha = 0.01 # Learning rate
-Epsilon = 0.000001
 separetor = ','
-#np.random.seed(56484)
+np.random.seed(564)
 
-fileReader = open("Admission.txt",'r')
+def calcDist(u , v):
+
+	return np.sqrt(np.sum(np.subtract(u,v)**2))
+
+def costFunction(X, uc): # cost function
+	m = X.shape[0] # size of dataset (i.e. number of rows)
+
+	return (1/m) * np.sum(np.linalg.norm((X - uc)**2))
+
+
+
+fileReader = open("RelationNetwork.csv",'r')
 lines = fileReader.readlines() #fileReader is now on EOF
-
-lines = shuffle(lines, random_state=np.random.random_integers(1545))
+#lines = shuffle(lines, random_state=np.random.random_integers(1545))
 
 for c in lines[0]: #counts how many commas has the file, so while its a csv file it should work for any dimension
 	if c == separetor:
 		nFeatures = nFeatures + 1
 
-print("# features", nFeatures)
-y = np.array([[i.split(separetor)[nFeatures][:-1]] for i in lines], dtype=int)
 X =	np.array([k.split(separetor)[0:nFeatures] for k in lines], dtype=float)
 
-print("y shape:", y.shape)
-print("X shape:", X.shape)
+while k <= 15:
+	print("computing k equals to:", k)
+	centroids[:] = []
+	iterNumber = 0
+	for centrId in range(k):
+		 centroids.append(X[np.random.random_integers(X.shape[0])]) #random samples as initial centroids
+
+	while iterNumber < nIters: #
+		distances[:] = k*[[]] # matrix ... for centroid recalculation
+		uc[:] = []
+		for xi in range(X.shape[0]):
+			dists[:] = []
+
+			for centrId in range(k):
+				dists.append(calcDist(centroids[centrId], X[xi])) #each position is the distance between the current tuple (X[xi]) and the centroids(identified by the indexes)
+
+			distances.insert(np.argmin(dists),[X[xi]])
+			uc.append(centroids[np.argmin(dists)])
 
 
-center1 = np.array( [float(X[:,0].argmin()), float(X[:,1].argmin())] )
-center0 = np.array( [float(X[:,0].argmax()), float(X[:,1].argmax())] )
 
+		''' update centroids '''
+		for ks in range(k):#ks is the centroid's id
+			for f in range(nFeatures): # for all features of ..
+				val = 0
+				for xs in range(len(distances[0])): # .. each row that was assigned to this ks centroid
+					 val = val + distances[ks][xs][f]
+				centroids[ks][f] = val /  len(distances[0])
 
-k = 1
-while True:
-	if k > 4:
-		break
-	plt.subplot(2,2,k)
-	plt.title(k)
-	plt.scatter(X[:,0], X[:,1])
-	plt.scatter((center0[0],center1[0]), (center0[1], center1[1]), color='r')
-	plt.grid(True)
+		costs.append(costFunction(X,uc))
+		iterNumber += 1
 
-	print(center0)
-	print(center1)
-	print("\n")
-	k = k + 1
+	k += 1
 
-	for tupl in range(0,X.shape[0]):
-		if distance.euclidean(center0,tupl) > distance.euclidean(center1,tupl):
-				center0[0] = (center0[0] + X[tupl][0])/2
-				center0[1] = (center0[1] + X[tupl][1])/2
-		else:
-			center1[0] = (center1[0] + X[tupl][0])/2
-			center1[1] = (center1[1] + X[tupl][1])/2
-
-
+print("Best K: ", np.argmin(costs))
+plt.figure()
+plt.xlabel("number of clusters")
+plt.ylabel("Cost Function")
+plt.title("close this window to continue")
+plt.plot(np.arange(1,16, 1), costs)
+plt.grid(True)
 plt.show()
+plt.close()
+
+k = np.argmin(costs)
+centroids[:] = []
+iterNumber = 0
+costs[:] = []
+
+for centrId in range(k):
+	 centroids.append(X[np.random.random_integers(X.shape[0])]) #random samples as initial centroids
+print("running 100 times with the new K... (that can take some time)")
+while iterNumber < 100: #
+	distances[:] = k*[[]] # matrix ... for centroid recalculation
+	uc[:] = []
+	for xi in range(X.shape[0]):
+		dists[:] = []
+
+		for centrId in range(k):
+			dists.append(calcDist(centroids[centrId], X[xi])) #each position is the distance between the current tuple (X[xi]) and the centroids(identified by the indexes)
+
+		distances.insert(np.argmin(dists),[X[xi]])
+		uc.append(centroids[np.argmin(dists)])
+
+
+
+	''' update centroids '''
+	for ks in range(k):#ks is the centroid's id
+		for f in range(nFeatures): # for all features of ..
+			val = 0
+			for xs in range(len(distances[0])): # .. each row that was assigned to this ks centroid
+				 val = val + distances[ks][xs][f]
+			centroids[ks][f] = val /  len(distances[0])
+
+	costs.append(costFunction(X,uc))
+
+	iterNumber += 1
+
+print("iteratration number {} was the best".format(np.argmin(costs)))
